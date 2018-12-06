@@ -2,6 +2,8 @@ package com.wangyuelin.ffmpegdevelop;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Surface;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private VideoView mVideoView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,15 +32,25 @@ public class MainActivity extends AppCompatActivity {
 
         // Example of a call to a native method
         TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
+//        tv.setText(stringFromJNI());
 
-        String filePath = "/storage/emulated/0/DCIM/Camera/test.mp4";
+        mVideoView = findViewById(R.id.videoview);
+
+        final String filePath = "/storage/emulated/0/DCIM/Camera/input.mp4";
         File mp4 = new File(filePath);
         if (!mp4.exists()) {
             tv.setText("mp4文件不存在");
             return;
         }
-        decode(filePath);
+
+
+        mVideoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mVideoView.player(filePath);
+
+            }
+        });
     }
 
     /**
@@ -45,5 +59,5 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
-    public native void decode(String fileName);
+    public native void decode(String fileName, Surface surface);
 }

@@ -86,4 +86,5 @@ target_link_libraries( # Specifies the target library.
         swresample
         avfilter
 
-        ${log-lib} )
+        ${log-lib}
+        android)
