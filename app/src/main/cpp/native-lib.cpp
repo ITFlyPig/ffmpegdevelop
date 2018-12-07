@@ -137,6 +137,7 @@ Java_com_wangyuelin_ffmpegdevelop_MainActivity_decode(JNIEnv *env, jobject insta
     AVPacket* packet = (AVPacket*)av_malloc(sizeof(AVPacket));
     if (!packet) {
         LOGE("申请AVPacket出错");
+
         return;
     }
     //AVFrame存储解码后一帧视频数据
