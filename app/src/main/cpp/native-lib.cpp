@@ -56,12 +56,16 @@ Java_com_wangyuelin_ffmpegdevelop_MainActivity_decode(JNIEnv *env, jobject insta
     AVFormatContext *pFmtContext;//格式上下文
     //初始化AVFormatContext
     pFmtContext = avformat_alloc_context();
-    int ret = avformat_open_input(&pFmtContext, fileName, NULL, NULL);//地三个参数为空，ffmpeg会自动检测输入流的格式
+    int ret = avformat_open_input(&pFmtContext, fileName, 0, NULL);//地三个参数为空，ffmpeg会自动检测输入流的格式
     if (ret != 0) {
 
         av_strerror(ret, errorStr, 1024);
         LOGE("avformat_open_input 打开输入文件时失败 失败码：%d 失败描述：%s", ret, errorStr);
 
+        return;
+    }
+    if (avformat_find_stream_info(pFmtContext, 0) < 0) {
+        LOGE("avformat_find_stream_info 获取视频信息失败");
         return;
     }
 
@@ -109,7 +113,7 @@ Java_com_wangyuelin_ffmpegdevelop_MainActivity_decode(JNIEnv *env, jobject insta
 
     LOGE("视频的信息如下：");
     LOGE("视屏的格式%s", pFmtContext->iformat->name);
-    LOGE("视屏的时长%f", pFmtContext->duration);
+    LOGE("视屏的时长%lld", pFmtContext->duration);
     LOGE("视频的宽：%d 高：%d", avctx->width, avctx->height);
     LOGE("解码器的名称：%s", codec->name);
 
@@ -152,18 +156,18 @@ Java_com_wangyuelin_ffmpegdevelop_MainActivity_decode(JNIEnv *env, jobject insta
         return;
     }
     //申请缓冲区
-    uint8_t * outBuffer = (uint8_t*)av_malloc(byteNum);
+    uint8_t * outBuffer = (uint8_t*)av_malloc(byteNum * sizeof(uint8_t));
 
     //使用申请的缓冲区填充frame，现在frame有存数据的地方了
-    av_image_fill_arrays(frame->data, frame->linesize, outBuffer, AV_PIX_FMT_RGBA, avctx->width, avctx->height, 1);
+    av_image_fill_arrays(pFrameRGB->data, pFrameRGB->linesize, outBuffer, AV_PIX_FMT_RGBA, avctx->width, avctx->height, 1);
 
     //用于转码或缩放的的参数（主要包含转码前和转码后的尺寸格式信息）
     LOGE("SwsContext开始赋值");
 
-    if (avctx->pix_fmt == NULL) {
-        LOGE("pix_fmt为空" );
-        return;
-    }
+//    if (avctx->pix_fmt == NULL) {
+//        LOGE("pix_fmt为空" );
+//        return;
+//    }
 
     struct SwsContext* swsContext = sws_getContext(
              avctx->width,
@@ -184,15 +188,22 @@ Java_com_wangyuelin_ffmpegdevelop_MainActivity_decode(JNIEnv *env, jobject insta
         if (packet->stream_index == videoStreamIndex) {//只需要视频数据(因为可能是音频或者字母数据)
             //解码压缩的数据，得到显示需要的像素数据
             ret = avcodec_send_packet(avctx, packet);
-            if (!ret) {
-                LOGE("avcodec_send_packet发送视频包出错");
+            if (ret) {
+                av_strerror(ret, errorStr, 1024);
+                LOGE("avcodec_send_packet发送视频包出错 错误码：%d,错误信息：%s", ret, errorStr);
                 continue;
             }
 
         }
 
         //读取解码后的帧
+//        int recvRet = avcodec_receive_frame(avctx, frame);
+//        if (ret) {
+//            av_strerror(ret, errorStr, 1024);
+//            LOGE("avcodec_receive_frame接受帧出错 错误码：%d,错误信息：%s", ret, errorStr);
+//        }
         while (avcodec_receive_frame(avctx, frame) == 0) {
+            LOGE("avcodec_send_packet接受到帧，开始解析");
 
             ANativeWindow_lock(nativeWindow, &windowBuffer, 0);
 
