@@ -60,4 +60,5 @@ public class MainActivity extends AppCompatActivity {
     public native String stringFromJNI();
 
     public native void decode(String fileName, Surface surface);
+
 }

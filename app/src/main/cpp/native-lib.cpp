@@ -217,11 +217,15 @@ Java_com_wangyuelin_ffmpegdevelop_MainActivity_decode(JNIEnv *env, jobject insta
             //实际内存一行数量
             int srcStride = pFrameRGB->linesize[0];
 
+
+            LOGE("源Frame的宽：%d 高:%d，显示窗口的宽：%d 高%d", frame->width, frame->height, windowBuffer.width, windowBuffer.height);
+
             // 由于window的stride和帧的stride不同,因此需要逐行复制
             int h;
             for (h = 0; h < videoH; h++) {
-                memcpy(dst + h * dstStride, src + h * srcStride, srcStride);
+                memcpy( dst + h * dstStride, src + h * srcStride, srcStride);
             }
+
 
             ANativeWindow_unlockAndPost(nativeWindow);
 
@@ -238,6 +242,7 @@ Java_com_wangyuelin_ffmpegdevelop_MainActivity_decode(JNIEnv *env, jobject insta
     avcodec_close(avctx);
     avformat_close_input(&pFmtContext);
 
+    ANativeWindow_release(nativeWindow);
 
     env->ReleaseStringUTFChars(fileName_, fileName);
 }
